@@ -1,0 +1,73 @@
+{
+  "name": "local-one",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first cross-device transfer app for Mac, Windows, iPhone, Android, and browser/PWA clients.",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k \"node server/index.js --dev\" \"vite --host 0.0.0.0\"",
+    "dev:server": "node server/index.js --dev",
+    "dev:web": "vite --host 0.0.0.0",
+    "dev:desktop": "concurrently -k \"node server/index.js --dev\" \"vite --host 0.0.0.0\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "build": "tsc --noEmit && vite build",
+    "start": "node server/index.js",
+    "desktop": "electron .",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "test": "node --test server/**/*.test.js",
+    "lint": "tsc --noEmit",
+    "qa:browser": "node scripts/visual-qa.mjs",
+    "smoke:api": "node scripts/api-smoke.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "bonjour-service": "^1.3.0",
+    "concurrently": "^9.2.1",
+    "electron": "^42.5.0",
+    "express": "^5.1.0",
+    "lucide-react": "^0.525.0",
+    "nanoid": "^5.1.5",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "vite": "^7.0.3",
+    "wait-on": "^8.0.3",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "electron-builder": "^26.0.12",
+    "playwright": "^1.61.1",
+    "typescript": "^5.8.3"
+  },
+  "build": {
+    "appId": "one.local.app",
+    "productName": "Local ONE",
+    "files": [
+      "dist/**/*",
+      "server/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  }
+}
