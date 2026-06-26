@@ -5,6 +5,18 @@ const { pathToFileURL } = require('node:url');
 let serverHandle;
 let mainWindow;
 
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
+
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
+
 async function startServer() {
   const serverModule = await import(pathToFileURL(path.join(__dirname, '../server/index.js')).href);
   serverHandle = await serverModule.startLocalOneServer({
@@ -39,8 +51,27 @@ function createWindow(url) {
 
 app.whenReady().then(async () => {
   process.env.LOCAL_ONE_DATA_DIR ||= path.join(app.getPath('userData'), 'data');
-  const handle = await startServer();
-  createWindow(`http://127.0.0.1:${handle.port}`);
+  try {
+    const handle = await startServer();
+    createWindow(`http://127.0.0.1:${handle.port}`);
+  } catch (error) {
+    if (error?.code === 'EADDRINUSE') {
+      await dialog.showMessageBox({
+        type: 'error',
+        title: 'Local ONE',
+        message: 'Local ONEは既に起動しています。',
+        detail: 'タスクトレイ/タスクマネージャーで既存のLocal ONEを確認してください。',
+      });
+    } else {
+      await dialog.showMessageBox({
+        type: 'error',
+        title: 'Local ONE',
+        message: 'Local ONEの起動に失敗しました。',
+        detail: String(error?.message || error),
+      });
+    }
+    app.quit();
+  }
 });
 
 app.on('activate', () => {
